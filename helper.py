@@ -126,8 +126,15 @@ def generate_packages_list(profile: str, packages: str) -> str:
         .split()
     )
 
+    # Taken from ASU's build.py
     remove_packages = (default_packages | profile_packages) - packages
     packages = packages | set(map(lambda p: f"-{p}", remove_packages))
+    # Some packages like libubus have a date suffix, so we remove it
+    # to avoid errors in case it was updated in new SNAPSHOT builds.
+    # This is what ASU and luci-app-attendedsysupgrade also do.
+    packages = list(packages)
+    for i in range(len(packages)):
+        packages[i] = re.sub(r"\d{4}\d{2}\d{2}$", "", packages[i])
     return " ".join(sorted(packages))
 
 

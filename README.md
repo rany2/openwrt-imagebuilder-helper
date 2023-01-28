@@ -5,7 +5,7 @@ Currently supports SNAPSHOT only.
 # Example usage
 
 ```
-$ ./helper.py --target x86/64 --profile generic --packages "$(ssh gw opkg list-installed | awk '{print $1}' | sed -E 's/[0-9]{8}$//g')"
+$ ./helper.py --target x86/64 --profile generic --packages "$(ssh gw opkg list-installed | awk '{print $1}')"
 sha256sums file is up to date
 would you like to restore the original config file? [y/N] 
 would you like to edit the config file? [y/N] 
@@ -23,6 +23,3 @@ Sat Jan 28 20:19:26 EET 2023 upgrade: Saving config files...
 Sat Jan 28 20:19:27 EET 2023 upgrade: Commencing upgrade. Closing all shell sessions.
 Command failed: ubus call system sysupgrade { "prefix": "\/tmp\/root", "path": "\/tmp\/openwrt-x86-64-generic-ext4-combined-efi.img.gz", "backup": "\/tmp\/sysupgrade.tgz", "command": "\/lib\/upgrade\/do_stage2", "options": { "save_partitions": 1 } } (Connection failed)
 ```
-
-**NOTE:** `sed -E 's/[0-9]{8}$//g'` is required to remove the ISO date from the end of packages like libubus as an upgrade might
-cause a change in that package name.
