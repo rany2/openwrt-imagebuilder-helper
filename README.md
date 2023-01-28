@@ -1,6 +1,31 @@
 # Helper script for IB usage
 
-Currently supports SNAPSHOT only.
+Currently supports SNAPSHOT only. Automatically does exclusion of packages not requested (so if `ppp` was not requested,
+the script will exclude it so it isn't reincluded by profile defaults).
+
+It also automatically updates IB when an update is found.
+
+# Options
+
+```
+usage: helper.py [-h] --target TARGET --profile PROFILE --packages PACKAGES [--files FILES] [--bin-dir BIN_DIR]
+                 [--extra-image-name EXTRA_IMAGE_NAME] [--disabled-services DISABLED_SERVICES] [--add-local-key ADD_LOCAL_KEY] [--no-ask]
+
+options:
+  -h, --help            show this help message and exit
+  --target TARGET       specify the target in the form of target/subtarget
+  --profile PROFILE     specify the profile, find list of profiles from `make info'
+  --packages PACKAGES   packages to include, separated by space
+  --files FILES         include extra files from <path>
+  --bin-dir BIN_DIR     alternative output directory for the images
+  --extra-image-name EXTRA_IMAGE_NAME
+                        add this to the output image filename (sanitized)
+  --disabled-services DISABLED_SERVICES
+                        which services in /etc/init.d/ should be disabled, separated by space
+  --add-local-key ADD_LOCAL_KEY
+                        store locally generated signing key in built images
+  --no-ask              do not ask about modifying the config file (uses the default IB config)
+```
 
 # Example usage
 

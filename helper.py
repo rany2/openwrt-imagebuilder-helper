@@ -223,6 +223,11 @@ def main():
         default=False,
         help="store locally generated signing key in built images",
     )
+    parser.add_argument(
+        "--no-ask",
+        action="store_true",
+        help="do not ask about modifying the config file (uses the default IB config)",
+    )
     args = parser.parse_args()
 
     target, sub_target = args.target.split("/")
@@ -231,14 +236,18 @@ def main():
     backup_original_config(".config")
 
     if (
-        os.path.exists(".config.orig")
+        not args.no_ask
+        and os.path.exists(".config.orig")
         and sha256sum(".config") != sha256sum(".config.orig")
         and asking_loop("would you like to restore the original config file?", "n")
         == "y"
     ):
         restore_original_config(".config")
 
-    if asking_loop("would you like to edit the config file?", "n") == "y":
+    if (
+        not args.no_ask
+        and asking_loop("would you like to edit the config file?", "n") == "y"
+    ):
         open_editor(".config")
 
     packages = generate_packages_list(args.profile, args.packages)
