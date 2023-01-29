@@ -131,7 +131,13 @@ def download_and_chdir(target, sub_target):
 
 def generate_packages_list(profile: str, packages: str) -> str:
     info_run = subprocess.run(["make", "info"], text=True, capture_output=True)
-    packages = set(packages.split()) if packages else set()
+    # Some packages like libubus have a date suffix, so we remove it
+    # to avoid errors in case it was updated in new SNAPSHOT builds.
+    # This is what ASU and luci-app-attendedsysupgrade also do.
+    packages = list(packages.split()) if packages else list()
+    for i in range(len(packages)):
+        packages[i] = re.sub(r"\d{4}\d{2}\d{2}$", "", packages[i])
+    packages = set(packages)
 
     default_packages = set(
         re.search(r"Default Packages: (.*)\n", info_run.stdout).group(1).split()
@@ -149,12 +155,6 @@ def generate_packages_list(profile: str, packages: str) -> str:
     # Taken from ASU's build.py
     remove_packages = (default_packages | profile_packages) - packages
     packages = packages | set(map(lambda p: f"-{p}", remove_packages))
-    # Some packages like libubus have a date suffix, so we remove it
-    # to avoid errors in case it was updated in new SNAPSHOT builds.
-    # This is what ASU and luci-app-attendedsysupgrade also do.
-    packages = list(packages)
-    for i in range(len(packages)):
-        packages[i] = re.sub(r"\d{4}\d{2}\d{2}$", "", packages[i])
     return " ".join(sorted(packages))
 
 
