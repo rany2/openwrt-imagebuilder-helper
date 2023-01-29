@@ -9,6 +9,7 @@ import sys
 import tarfile
 from hashlib import sha256
 from os.path import basename
+from typing import Optional
 from urllib.request import urlopen
 
 FMT_URL: str = "https://downloads.openwrt.org/snapshots/targets/%s/%s/%s"
@@ -42,11 +43,21 @@ def sha256sum(fname: str) -> str:
     return h.hexdigest()
 
 
+def get_ib_sha256(text: str) -> Optional[str]:
+    try:
+        return re.search(
+            r"([0-9a-f]{64})\s+\*openwrt-imagebuilder-.*\.Linux-x86_64\.tar\.xz", text
+        ).group(1)
+    except AttributeError:
+        return None
+
+
 def download_and_chdir(target, sub_target):
     ib_url = get_ib_url(target, sub_target)
     sha256_url = get_sha256sum_file_url(target, sub_target)
 
     # download the sha256sum file
+    new_sha256_data = b""
     with urlopen(sha256_url) as f, open(
         f"{target}_{sub_target}-sha256.new", "wb"
     ) as f2:
@@ -55,12 +66,21 @@ def download_and_chdir(target, sub_target):
             if not chunk:
                 break
             f2.write(chunk)
+            new_sha256_data += chunk
+    new_sha256_data = new_sha256_data.decode("utf-8")
+
+    # copy old sha256sum data if exists
+    old_sha256_data = ""
+    try:
+        with open(f"{target}_{sub_target}-sha256", "r") as f:
+            old_sha256_data = f.read()
+    except FileNotFoundError:
+        pass
 
     if (
         not os.path.exists(f"{target}_{sub_target}-sha256")
         or not os.path.exists(basename(ib_url)[: -len(".tar.xz")])
-        or sha256sum(f"{target}_{sub_target}-sha256.new")
-        != sha256sum(f"{target}_{sub_target}-sha256")
+        or get_ib_sha256(new_sha256_data) != get_ib_sha256(old_sha256_data)
     ):
         print("old configs were removed, image builder is getting updated...")
 
@@ -103,7 +123,7 @@ def download_and_chdir(target, sub_target):
         print("image builder is updated")
     else:
         os.remove(f"{target}_{sub_target}-sha256.new")
-        print("sha256sums file is up to date")
+        print("IB sha256sum is up to date")
 
     # chdir to the extracted dir
     os.chdir(basename(ib_url)[: -len(".tar.xz")])
